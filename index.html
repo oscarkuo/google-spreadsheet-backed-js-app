@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JS App with Google Spreadsheet backend</title>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    .hidden {
+      display: none
+    }
+  </style>
+</head>
+<body>
+  <div id="authDiv" class="hidden">
+    <button id='signInButton' onclick="handleAuthClick()">Sign In</button>
+    <button id='signOutButton' onclick="handleSignOutClick()">Sign Out</button>
+  </div>
+  <div id="spreadsheetsDiv">
+  </div>
+  <div id="inputDiv" class="hidden">
+    <input id="dataInput" placeholder="Enter data" />
+    <button onclick="appendData()">Append to Sheet</button>
+    <button onclick="readData()">Read Sheet</button>
+  </div>
+  <div id="outputDiv"></div>
+  <script src="script.js"></script>
+</body>
+</html>
