@@ -9,6 +9,10 @@
     .hidden {
       display: none
     }
+    button {
+      width: 30%;
+      height: 30px;
+    }
   </style>
 </head>
 <body>
@@ -18,27 +22,33 @@
     <button id='signOutButton' onclick="onSignOutClick()" disabled="true">Sign Out</button>
   </div>
   <div id="selectSpreadsheetDiv" class="hidden">
+    <h2>Choose a Spreadsheet</h2>
     <div id="spreadsheetsDiv">
     </div>
     <button id='selectSpreadsheetButton' onclick='onSelectSpreadsheetClick()'>Select</button>
     <button id='unselectSpreadsheetButton' onclick='onUnselectSpreadsheetClick()' disabled="true">Reset</button>
   </div>
   <div id="inputDiv" class="hidden">
-    <div>
+    <h2>Enter data</h2>
+    <p>
+      <label>Initial Investment</label><br/>
       <input type="text" id="a1Input" placeholder="Initial Investment" />
-    </div>
-    <div>
+    </p>
+    <p>
+      <label>Interest Rate</label><br/>
       <input type="text" id="a2Input" placeholder="Interest Rate" />
-    </div>
-    <div>
+    </p>
+    <p>
+      <label>Years</label><br/>
       <input type="text" id="a3Input" placeholder="Years" />
-    </div>
-    <div>
+    </p>
+    <p>
+      <label>Result</label><br/>
       <input type="text" id="a4Output" readonly placeholder="result" />
-    </div>
-    <div>
+    </p>
+    <p>
       <button id='submitInputs' onclick='onSubmitInputClick()'>Submit</button>
-    </div>
+    </p>
   </div>
   <pre id="outputDiv"></pre>
   <script src="script.js"></script>

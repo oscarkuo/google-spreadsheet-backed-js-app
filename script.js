@@ -32,13 +32,17 @@ const elements = {
 const state = {
   spreadsheetId: null,
   tokenClient: null,
-  setAccessToken: (accessToken) => {
-    accessToken
-      ? sessionStorage.setItem('google_access_token', accessToken)
-      : sessionStorage.removeItem('google_access_token');
-  },
-  getAccessToken: () => sessionStorage.getItem('google_access_token')
+  accessToken: null
 };
+
+function setAccessToken (accessToken) {
+  if (accessToken) {
+    sessionStorage.setItem('google_access_token', accessToken);
+  } else {
+    sessionStorage.removeItem('google_access_token');
+  }
+}
+function getAccessToken() { return sessionStorage.getItem('google_access_token'); }
 
 function showInputDiv() { elements.inputDiv.classList.remove('hidden'); }
 function hideInputDiv() { elements.inputDiv.classList.add('hidden'); }
@@ -52,6 +56,11 @@ function enableSpreadsheetRadioElements(enabled) {
     getElementsByName("googleSpreadsheet");
   for (const spreadsheetRadioElement of spreadsheetRadioElements) {
     spreadsheetRadioElement.disabled = !!!enabled;
+    if (state.spreadsheetId != null && !spreadsheetRadioElement.checked) {
+      spreadsheetRadioElement.parentElement.classList.add('hidden');
+    } else {
+      spreadsheetRadioElement.parentElement.classList.remove('hidden');
+    }
   }
 }
 
@@ -67,7 +76,7 @@ function updateViewState() {
     showAuthDiv();
   }
 
-  if (state.getAccessToken() == null) {
+  if (state.accessToken == null) {
     elements.signInButton.disabled = false;
     elements.signOutButton.disabled = true;
     hideSelectSpreadsheetsDiv();
@@ -223,7 +232,7 @@ async function onSubmitInputClick() {
 }
 
 async function onAccessTokenRetrieved() {
-  gapi.client.setToken({ access_token: state.getAccessToken() });
+  gapi.client.setToken({ access_token: state.accessToken });
   await fetchSpreadsheets();
 }
 
@@ -233,7 +242,8 @@ async function onGoogleTokenResponse(response) {
     return;
   }
   log('Signed in with token.');
-  state.setAccessToken(response.access_token);
+  setAccessToken(response.access_token);
+  state.accessToken = response.access_token;
   await onAccessTokenRetrieved();
 }
 
@@ -243,7 +253,8 @@ async function onSignInClick() {
     return;
   }
 
-  if (state.getAccessToken()) {
+  if (getAccessToken()) {
+    state.accessToken = getAccessToken();
     await onAccessTokenRetrieved();
   } else {
     state.tokenClient.callback = async (response) => await onGoogleTokenResponse(response);
@@ -253,12 +264,14 @@ async function onSignInClick() {
 }
 
 function onSignOutClick() {
-  const token = state.getAccessToken();
+  const token = state.accessToken;
   if (token) {
     google.accounts.oauth2.revoke(token, () => {
       log('Signed out.');
     });
-    state.setAccessToken(null);
+    state.accessToken = null;
+    state.spreadsheetId = null;
+    setAccessToken(null);
     updateViewState();
   } else {
     log('Not signed in.');
