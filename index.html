@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.svg" sizes="any" type="image/svg+xml">
   <title>🍞 Spreadsheet App</title>
   <style>
     .hidden {
@@ -15,12 +17,28 @@
     <button id='signInButton' onclick="onSignInClick()">Sign In</button>
     <button id='signOutButton' onclick="onSignOutClick()" disabled="true">Sign Out</button>
   </div>
-  <div id="spreadsheetsDiv">
+  <div id="selectSpreadsheetDiv" class="hidden">
+    <div id="spreadsheetsDiv">
+    </div>
+    <button id='selectSpreadsheetButton' onclick='onSelectSpreadsheetClick()'>Select</button>
+    <button id='unselectSpreadsheetButton' onclick='onUnselectSpreadsheetClick()' disabled="true">Reset</button>
   </div>
   <div id="inputDiv" class="hidden">
-    <input id="dataInput" placeholder="Enter data" />
-    <button onclick="appendData()">Append to Sheet</button>
-    <button onclick="readData()">Read Sheet</button>
+    <div>
+      <input type="text" id="a1Input" placeholder="Initial Investment" />
+    </div>
+    <div>
+      <input type="text" id="a2Input" placeholder="Interest Rate" />
+    </div>
+    <div>
+      <input type="text" id="a3Input" placeholder="Years" />
+    </div>
+    <div>
+      <input type="text" id="a4Output" readonly placeholder="result" />
+    </div>
+    <div>
+      <button id='submitInputs' onclick='onSubmitInputClick()'>Submit</button>
+    </div>
   </div>
   <pre id="outputDiv"></pre>
   <script src="script.js"></script>

@@ -16,13 +16,21 @@ const SCOPES = [
 const elements = {
   signInButton: document.getElementById('signInButton'),
   signOutButton: document.getElementById('signOutButton'),
+  selectSpreadsheetButton: document.getElementById('selectSpreadsheetButton'),
+  unselectSpreadsheetButton: document.getElementById('unselectSpreadsheetButton'),
   inputDiv: document.getElementById('inputDiv'),
+  a1Input: document.getElementById('a1Input'),
+  a2Input: document.getElementById('a2Input'),
+  a3Input: document.getElementById('a3Input'),
+  a4Output: document.getElementById('a4Output'),
   outputDiv: document.getElementById('outputDiv'),
   authDiv: document.getElementById('authDiv'),
-  spreadsheetsDiv: document.getElementById('spreadsheetsDiv')
+  spreadsheetsDiv: document.getElementById('spreadsheetsDiv'),
+  selectSpreadsheetDiv: document.getElementById('selectSpreadsheetDiv')
 };
 
 const state = {
+  spreadsheetId: null,
   tokenClient: null,
   setAccessToken: (accessToken) => {
     accessToken
@@ -31,6 +39,57 @@ const state = {
   },
   getAccessToken: () => sessionStorage.getItem('google_access_token')
 };
+
+function showInputDiv() { elements.inputDiv.classList.remove('hidden'); }
+function hideInputDiv() { elements.inputDiv.classList.add('hidden'); }
+function showSelectSpreadsheetsDiv() { elements.selectSpreadsheetDiv.classList.remove('hidden'); }
+function hideSelectSpreadsheetsDiv() { elements.selectSpreadsheetDiv.classList.add('hidden'); }
+function showAuthDiv() { elements.authDiv.classList.remove('hidden'); }
+function hideAuthDiv() { elements.authDiv.classList.add('hidden'); }
+
+function enableSpreadsheetRadioElements(enabled) {
+  const spreadsheetRadioElements = document.
+    getElementsByName("googleSpreadsheet");
+  for (const spreadsheetRadioElement of spreadsheetRadioElements) {
+    spreadsheetRadioElement.disabled = !!!enabled;
+  }
+}
+
+function clearSpreadsheetsDiv() {
+  while (elements.spreadsheetsDiv.firstChild) {
+    elements.spreadsheetsDiv.removeChild(elements.spreadsheetsDiv.firstChild);
+  }
+}
+function updateViewState() {
+  if (state.tokenClient == null) {
+    hideAuthDiv();
+  } else {
+    showAuthDiv();
+  }
+
+  if (state.getAccessToken() == null) {
+    elements.signInButton.disabled = false;
+    elements.signOutButton.disabled = true;
+    hideSelectSpreadsheetsDiv();
+    clearSpreadsheetsDiv();
+  } else {
+    elements.signInButton.disabled = true;
+    elements.signOutButton.disabled = false;
+    showSelectSpreadsheetsDiv();
+  }
+
+  if (state.spreadsheetId == null) {
+    hideInputDiv();
+    enableSpreadsheetRadioElements(true);
+    elements.selectSpreadsheetButton.disabled = false;
+    elements.unselectSpreadsheetButton.disabled = true;
+  } else {
+    showInputDiv();
+    enableSpreadsheetRadioElements(false);
+    elements.selectSpreadsheetButton.disabled = true;
+    elements.unselectSpreadsheetButton.disabled = false;
+  }
+}
 
 function log(msg) {
   const time = new Date().toLocaleTimeString();
@@ -54,9 +113,10 @@ async function fetchSpreadsheets() {
   if (!files || files.length === 0) {
     const label = document.createElement('label');
     label.textContent = 'No spreadsheets found.';
-    elements.spreadsheetsDiv.appendChild(div);
+    elements.spreadsheetsDiv.appendChild(label);
   } else {
     log(`Found ${files.length} spreadsheets`)
+    clearSpreadsheetsDiv();
     for (const file of files) {
       const item = document.createElement('input');
       item.type = 'radio';
@@ -75,12 +135,94 @@ async function fetchSpreadsheets() {
       div.appendChild(label);
       elements.spreadsheetsDiv.appendChild(div);
     }
+
+    updateViewState();
   }
 }
 
+async function updateCellValue(spreadsheetId, range, value) {
+  try {
+    const response = await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: 'USER_ENTERED', // or 'RAW'
+      resource: {
+        values: [[value]]
+      }
+    });
+
+    log(`✅ Updated ${range} to "${value}"`);
+    return response;
+  } catch (error) {
+    log(`❌ Error updating ${range}: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
+async function getCellValue(spreadsheetId, range) {
+  try {
+    const response = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range // e.g., "Sheet1!A1"
+    });
+
+    const value = response.result.values?.[0]?.[0];
+    if (value !== undefined) {
+      log(`Value at ${range}: ${value}`);
+      return value;
+    } else {
+      log(`No data found at ${range}.`);
+      return null;
+    }
+  } catch (error) {
+    log(`Error reading cell ${range}: ` + JSON.stringify(error));
+    return null;
+  }
+}
+
+async function onSelectSpreadsheetClick() {
+  var selectedSpreadsheet = document.
+    querySelector("input[type='radio'][name=googleSpreadsheet]:checked");
+  if (selectedSpreadsheet == null) {
+    log('Please select a spreadsheet.');
+  } else {
+    state.spreadsheetId = selectedSpreadsheet.value;
+    log('Selected ' + state.spreadsheetId);
+
+    enableSpreadsheetRadioElements(false);
+
+    const [a1, a2, a3, a4] = await Promise.all([
+      getCellValue(state.spreadsheetId, 'Sheet1!A1'),
+      getCellValue(state.spreadsheetId, 'Sheet1!A2'),
+      getCellValue(state.spreadsheetId, 'Sheet1!A3'),
+      getCellValue(state.spreadsheetId, 'Sheet1!A4'),
+    ]);
+
+    elements.a1Input.value = a1;
+    elements.a2Input.value = a2;
+    elements.a3Input.value = a3;
+    elements.a4Output.value = a4;
+  }
+
+  updateViewState();
+}
+
+function onUnselectSpreadsheetClick() {
+  state.spreadsheetId = null;
+  updateViewState();
+}
+
+async function onSubmitInputClick() {
+  await Promise.all([
+    updateCellValue(state.spreadsheetId, 'Sheet1!A1', elements.a1Input.value),
+    updateCellValue(state.spreadsheetId, 'Sheet1!A2', elements.a2Input.value),
+    updateCellValue(state.spreadsheetId, 'Sheet1!A3', elements.a3Input.value)
+  ]);
+
+  elements.a4Output.value = await getCellValue(state.spreadsheetId, 'Sheet1!A4');
+}
+
 async function onAccessTokenRetrieved() {
-  elements.signInButton.disabled = true;
-  elements.signOutButton.disabled = false;
   gapi.client.setToken({ access_token: state.getAccessToken() });
   await fetchSpreadsheets();
 }
@@ -107,6 +249,7 @@ async function onSignInClick() {
     state.tokenClient.callback = async (response) => await onGoogleTokenResponse(response);
     state.tokenClient.requestAccessToken({ prompt: 'consent', scope: SCOPES });
   }
+  updateViewState();
 }
 
 function onSignOutClick() {
@@ -116,8 +259,7 @@ function onSignOutClick() {
       log('Signed out.');
     });
     state.setAccessToken(null);
-    elements.signInButton.disabled = false;
-    elements.signOutButton.disabled = true;
+    updateViewState();
   } else {
     log('Not signed in.');
   }
@@ -144,8 +286,9 @@ async function onGapiLoaded() {
     });
 
     log('Google token client initialized.');
-    elements.authDiv.classList.remove('hidden');
   } catch (error) {
     log('Error initializing GAPI: ' + JSON.stringify(error));
   }
+
+  updateViewState();
 }
