@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>JS App with Google Spreadsheet backend</title>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta charset="UTF-8">
+  <title>🍞 Spreadsheet App</title>
   <style>
     .hidden {
       display: none
@@ -11,18 +10,23 @@
   </style>
 </head>
 <body>
+  <h1>🍞 Spreadsheet App</h1>
   <div id="authDiv" class="hidden">
-    <button id='signInButton' onclick="handleAuthClick()">Sign In</button>
-    <button id='signOutButton' onclick="handleSignOutClick()">Sign Out</button>
+    <button id='signInButton' onclick="onSignInClick()">Sign In</button>
+    <button id='signOutButton' onclick="onSignOutClick()" disabled="true">Sign Out</button>
   </div>
   <div id="spreadsheetsDiv">
+    <ul id="spreadsheetsList">
+    </ul>
   </div>
   <div id="inputDiv" class="hidden">
     <input id="dataInput" placeholder="Enter data" />
     <button onclick="appendData()">Append to Sheet</button>
     <button onclick="readData()">Read Sheet</button>
   </div>
-  <div id="outputDiv"></div>
+  <pre id="outputDiv"></pre>
   <script src="script.js"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="onGapiLoaded()"></script>
 </body>
 </html>
