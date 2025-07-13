@@ -1,7 +1,7 @@
 const CACHE_NAME = 'google-spreadsheet-backed-js-app-cache';
 const FILES_TO_CACHE = [
-  '/index.html',
-  '/script.js',
+  './index.html',
+  './script.js',
 ];
 
 // Cache local files on install
@@ -14,6 +14,15 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+function getCacheKey(url) {
+  const parsed = new URL(url);
+  if (parsed.pathname.endsWith('/')) {
+    parsed.pathname += 'index.html';
+    return parsed.toString();
+  }
+  return url;
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -22,9 +31,7 @@ self.addEventListener('fetch', (event) => {
     return; // if request is not GET for a local resource, passthrough request
   }
 
-  const cacheKey = url.pathname === '/'
-      ? url.toString() + "index.html"
-      : url.toString();
+  const cacheKey = getCacheKey(url);
 
   event.respondWith(
     fetch(event.request)
