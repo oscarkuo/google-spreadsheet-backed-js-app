@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.svg" sizes="any" type="image/svg+xml">
+  <title>🍞 Spreadsheet App</title>
+  <style>
+    .hidden {
+      display: none
+    }
+    button {
+      width: 30%;
+      height: 30px;
+    }
+    #outputDetailsDiv {
+      color: magenta;
+    }
+  </style>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('✅ Service Worker registered'))
+      .catch(err => console.error('❌ SW registration failed:', err));
+  }
+  </script>
+</head>
+<body>
+  <h1>🍞 Spreadsheet App</h1>
+  <button id="reloadButton" onclick="onReload()" class="hidden">Reload</button>
+  <div id="authDiv" class="hidden">
+    <button id='signInButton' onclick="onSignInClick()">Sign In</button>
+    <button id='signOutButton' onclick="onSignOutClick()" disabled="true">Sign Out</button>
+  </div>
+  <div id="selectSpreadsheetDiv" class="hidden">
+    <h2>Choose a Spreadsheet</h2>
+    <div id="spreadsheetsDiv">
+    </div>
+    <p>
+      <button id='selectSpreadsheetButton' onclick='onSelectSpreadsheetClick()'>Select</button>
+      <button id='unselectSpreadsheetButton' onclick='onUnselectSpreadsheetClick()' disabled="true">Reset</button>
+    </p>
+  </div>
+  <div id="inputDiv" class="hidden">
+    <h2>Enter data</h2>
+    <p>
+      <label>Initial Investment</label><br/>
+      <input type="text" id="a1Input" placeholder="Initial Investment" />
+    </p>
+    <p>
+      <label>Interest Rate</label><br/>
+      <input type="text" id="a2Input" placeholder="Interest Rate" />
+    </p>
+    <p>
+      <label>Years</label><br/>
+      <input type="text" id="a3Input" placeholder="Years" />
+    </p>
+    <p>
+      <label>Result</label><br/>
+      <input type="text" id="a4Output" readonly placeholder="result" />
+    </p>
+    <p>
+      <button id='submitInputs' onclick='onSubmitInputClick()'>Submit</button>
+    </p>
+  </div>
+  <p>
+    <div id="outputDiv"></div>
+    <div id="outputDetailsDiv"></div>
+  </p>
+  <script src="script.js"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="onGapiLoaded()"></script>
+</body>
+</html>
