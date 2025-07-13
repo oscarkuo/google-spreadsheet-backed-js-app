@@ -1,7 +1,5 @@
 const CLIENT_ID = '33921811367-ssbbmr2i5c6qe1fahef26g8mu6onktvt.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyBhUU-fevlx23cG3KeY1iEIOT68ngfHbHM';
-const SPREADSHEET_ID = '1XfFf3xtcTV4tUEHHsZhMtUWHpCHahmSd0YQZ7m8KzU0';
-const RANGE = 'Sheet1!A:A';
 
 const DISCOVERY_DOCS = [
   'https://sheets.googleapis.com/$discovery/rest?version=v4',
@@ -14,6 +12,7 @@ const SCOPES = [
 ].join(' ');
 
 const elements = {
+  reloadButton: document.getElementById('reloadButton'),
   signInButton: document.getElementById('signInButton'),
   signOutButton: document.getElementById('signOutButton'),
   selectSpreadsheetButton: document.getElementById('selectSpreadsheetButton'),
@@ -24,9 +23,11 @@ const elements = {
   a3Input: document.getElementById('a3Input'),
   a4Output: document.getElementById('a4Output'),
   outputDiv: document.getElementById('outputDiv'),
+  outputDetailsDiv: document.getElementById('outputDetailsDiv'),
   authDiv: document.getElementById('authDiv'),
   spreadsheetsDiv: document.getElementById('spreadsheetsDiv'),
-  selectSpreadsheetDiv: document.getElementById('selectSpreadsheetDiv')
+  selectSpreadsheetDiv: document.getElementById('selectSpreadsheetDiv'),
+  reloadButton: document.getElementById('reloadButton')
 };
 
 const state = {
@@ -100,9 +101,11 @@ function updateViewState() {
   }
 }
 
-function log(msg) {
+function log(message, details) {
   const time = new Date().toLocaleTimeString();
-  elements.outputDiv.textContent = `[${time}] ${msg}\n` + elements.outputDiv.textContent;
+  console.log(`[${time}] ${message} ${details}`)
+  elements.outputDiv.textContent = message;
+  elements.outputDetailsDiv.textContent = details == null ? '' : details;
 }
 
 async function fetchSpreadsheets() {
@@ -160,10 +163,10 @@ async function updateCellValue(spreadsheetId, range, value) {
       }
     });
 
-    log(`✅ Updated ${range} to "${value}"`);
+    log(`Updated ${range} to "${value}"`);
     return response;
   } catch (error) {
-    log(`❌ Error updating ${range}: ${JSON.stringify(error)}`);
+    log(`Error updating ${range}: ${JSON.stringify(error)}`);
     throw error;
   }
 }
@@ -255,10 +258,12 @@ async function onSignInClick() {
 
   if (getAccessToken()) {
     state.accessToken = getAccessToken();
+    state.tokenClient.callback = async (response) => await onGoogleTokenResponse(response);
+    state.tokenClient.requestAccessToken();
     await onAccessTokenRetrieved();
   } else {
     state.tokenClient.callback = async (response) => await onGoogleTokenResponse(response);
-    state.tokenClient.requestAccessToken({ prompt: 'consent', scope: SCOPES });
+    state.tokenClient.requestAccessToken({ scope: SCOPES });
   }
   updateViewState();
 }
@@ -278,12 +283,12 @@ function onSignOutClick() {
   }
 }
 
+function onReload() {
+  location.reload();
+}
+
 async function onGapiLoaded() {
   log('Initializing Google token client...');
-  if (state.tokenClient) {
-    log('Google token client already initialized.');
-    return;
-  }
 
   try {
     await new Promise((resolve) => gapi.load('client', resolve));
@@ -300,7 +305,8 @@ async function onGapiLoaded() {
 
     log('Google token client initialized.');
   } catch (error) {
-    log('Error initializing GAPI: ' + JSON.stringify(error));
+    log('Failed to initialise Google API, please reload', JSON.stringify(error));
+    reloadButton.classList.remove('hidden');
   }
 
   updateViewState();

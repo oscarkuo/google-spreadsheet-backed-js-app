@@ -13,10 +13,21 @@
       width: 30%;
       height: 30px;
     }
+    #outputDetailsDiv {
+      color: magenta;
+    }
   </style>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('✅ Service Worker registered'))
+      .catch(err => console.error('❌ SW registration failed:', err));
+  }
+  </script>
 </head>
 <body>
   <h1>🍞 Spreadsheet App</h1>
+  <button id="reloadButton" onclick="onReload()" class="hidden">Reload</button>
   <div id="authDiv" class="hidden">
     <button id='signInButton' onclick="onSignInClick()">Sign In</button>
     <button id='signOutButton' onclick="onSignOutClick()" disabled="true">Sign Out</button>
@@ -25,8 +36,10 @@
     <h2>Choose a Spreadsheet</h2>
     <div id="spreadsheetsDiv">
     </div>
-    <button id='selectSpreadsheetButton' onclick='onSelectSpreadsheetClick()'>Select</button>
-    <button id='unselectSpreadsheetButton' onclick='onUnselectSpreadsheetClick()' disabled="true">Reset</button>
+    <p>
+      <button id='selectSpreadsheetButton' onclick='onSelectSpreadsheetClick()'>Select</button>
+      <button id='unselectSpreadsheetButton' onclick='onUnselectSpreadsheetClick()' disabled="true">Reset</button>
+    </p>
   </div>
   <div id="inputDiv" class="hidden">
     <h2>Enter data</h2>
@@ -50,7 +63,10 @@
       <button id='submitInputs' onclick='onSubmitInputClick()'>Submit</button>
     </p>
   </div>
-  <pre id="outputDiv"></pre>
+  <p>
+    <div id="outputDiv"></div>
+    <div id="outputDetailsDiv"></div>
+  </p>
   <script src="script.js"></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://accounts.google.com/gsi/client" onload="onGapiLoaded()"></script>
